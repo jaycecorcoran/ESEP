@@ -1,0 +1,88 @@
+openapi: 3.2.0
+info:
+  title: Movie Theater Seat Reservation API
+  version: 1.0.0
+  description: >-
+    Allows customers to check available seats for a movie showtime,
+    reserve selected seats, and cancel a reservation before checkout.
+    Payment and ticket delivery are handled by separate services.
+
+paths:
+  /showtimes/{showtimeId}/seats:
+    get:
+      summary: View available seats for a showtime
+      parameters:
+        - name: showtimeId
+          in: path
+          required: true
+          description: ID of the selected movie showtime
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Available seats returned successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  showtimeId:
+                    type: string
+                  availableSeats:
+                    type: array
+                    items:
+                      type: string
+        '404':
+          description: Showtime not found
+
+  /reservations:
+    post:
+      summary: Reserve seats for a showtime
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [showtimeId, seatIds]
+              properties:
+                showtimeId:
+                  type: string
+                seatIds:
+                  type: array
+                  minItems: 1
+                  items:
+                    type: string
+      responses:
+        '201':
+          description: Seats reserved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reservationId:
+                    type: string
+                  expiresAt:
+                    type: string
+                    format: date-time
+        '409':
+          description: One or more selected seats are unavailable
+
+  /reservations/{reservationId}:
+    delete:
+      summary: Cancel an existing seat reservation
+      parameters:
+        - name: reservationId
+          in: path
+          required: true
+          description: ID of the reservation to cancel
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Reservation canceled successfully
+        '404':
+          description: Reservation not found
+        '409':
+          description: Reservation cannot be canceled after checkout
